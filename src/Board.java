@@ -51,7 +51,9 @@ public class Board extends JPanel implements MouseListener {
 	private static ArrayList<Integer> playGameRect = new ArrayList<Integer>();
 	private static ArrayList<Integer> infoRect = new ArrayList<Integer>();
 	private static ArrayList<Integer> playOrPauseRect = new ArrayList<Integer>();
+	private static ArrayList<Integer> muteRect = new ArrayList<Integer>();
 	private static boolean showInfo;
+	private static boolean mute = false;
 
 	/* Barriers */
 	static ArrayList<Barrier> barriers = new ArrayList<Barrier>();
@@ -110,7 +112,8 @@ public class Board extends JPanel implements MouseListener {
 	static boolean isAlive = true;
 	static int sSpeed = 5 * constant;
 	static int spSpeed = -20 * constant;
-	static ArrayList<Projectile> sProjectiles = new ArrayList<Projectile>(); // list of projectiles thrown by the spaceship
+	static ArrayList<Projectile> sProjectiles = new ArrayList<Projectile>(); // list of projectiles thrown by the
+																				// spaceship
 
 	public static void main(String[] args) throws IOException {
 
@@ -206,6 +209,7 @@ public class Board extends JPanel implements MouseListener {
 		this.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "newGame");
 		this.getInputMap().put(KeyStroke.getKeyStroke("I"), "info");
 		this.getInputMap().put(KeyStroke.getKeyStroke("ESCAPE"), "escape");
+		this.getInputMap().put(KeyStroke.getKeyStroke("M"), "mute");
 
 		this.getActionMap().put("right", new AbstractAction() {
 
@@ -230,7 +234,7 @@ public class Board extends JPanel implements MouseListener {
 
 				if (!gameOver) {
 
-					if (sProjectiles.size() == 0 ) {
+					if (sProjectiles.size() == 0) {
 						Projectile projectile = new Projectile(Images.getSpaceshipProjectile(), spSpeed, true);
 						int row = spaceship.getRow() - projectile.getHeight();
 						int col = spaceship.getCol() + spaceship.getWidth() / 2 - projectile.getWidth() / 2;
@@ -252,6 +256,7 @@ public class Board extends JPanel implements MouseListener {
 			}
 
 		});
+
 		this.getActionMap().put("pause", new AbstractAction() {
 
 			public void actionPerformed(ActionEvent e) {
@@ -295,6 +300,14 @@ public class Board extends JPanel implements MouseListener {
 			}
 
 		});
+		this.getActionMap().put("mute", new AbstractAction() {
+
+			public void actionPerformed(ActionEvent e) {
+
+				mute = !mute;
+			}
+
+		});
 
 		this.requestFocusInWindow();
 
@@ -324,9 +337,9 @@ public class Board extends JPanel implements MouseListener {
 			dashboardTextColor = "#F8F1D7";
 
 		}
-//		GreenBirdEnemy -- ProjectilePurple
-//		OrangeBirdEnemy -- ProjectileBlue
-//		PurpleBirdEnemy -- ProjectileRed
+		// GreenBirdEnemy -- ProjectilePurple
+		// OrangeBirdEnemy -- ProjectileBlue
+		// PurpleBirdEnemy -- ProjectileRed
 
 		if (currentTheme.equals("sky")) {
 			background = Images.getSkyBackground();
@@ -349,9 +362,9 @@ public class Board extends JPanel implements MouseListener {
 			}
 			dashboardTextColor = "#232323";
 		}
-//		YellowFishEnemy -- ProjectileBlue
-//		PinkFishEnemy -- ProjectileRed
-//		GreenFishEnemy -- ProjectilePurple
+		// YellowFishEnemy -- ProjectileBlue
+		// PinkFishEnemy -- ProjectileRed
+		// GreenFishEnemy -- ProjectilePurple
 
 		if (currentTheme.equals("sea")) {
 			background = Images.getSeaBackground();
@@ -374,9 +387,9 @@ public class Board extends JPanel implements MouseListener {
 			}
 			dashboardTextColor = "#232323";
 		}
-//		EnemyBunny -- ProjectilePurple
-//		EnemyFox -- ProjectileRed
-//		EnemyLizard -- ProjectileBlue
+		// EnemyBunny -- ProjectilePurple
+		// EnemyFox -- ProjectileRed
+		// EnemyLizard -- ProjectileBlue
 
 		if (currentTheme.equals("desert")) {
 			background = Images.getDessertBackground();
@@ -708,7 +721,9 @@ public class Board extends JPanel implements MouseListener {
 									enemy.incrementNumBlasts();
 								activateSuperpower(enemy);
 								enemy.setInvalid(true);
-								Audio.makeSoftKillingSoundForEnemy();
+								if (!mute) {
+									Audio.makeSoftKillingSoundForEnemy();
+								}
 								score += enemy.getScore();
 								if (!rocketProjectile) {
 									sProjectiles.remove(projectile);
@@ -724,7 +739,8 @@ public class Board extends JPanel implements MouseListener {
 						flyingEnemy.setInvalid(true);
 						sProjectiles.remove(projectile);
 						score += flyingEnemy.getScore();
-						Audio.makeHardKillingSoundForEnemy();
+						if (!mute)
+							Audio.makeHardKillingSoundForEnemy();
 					}
 					for (int b = 0; b < barriers.size(); b++) {
 						if (isColliding(barriers.get(b), projectile)) {
@@ -1016,7 +1032,8 @@ public class Board extends JPanel implements MouseListener {
 			if (isColliding(spaceship, projectile)) {
 				// spaceship.hit(projectile.getDamage());
 				spaceship.removeLife();
-				Audio.makeKillingSoundForSpaceship();
+				if (!mute)
+					Audio.makeKillingSoundForSpaceship();
 				livesLeft = spaceship.getLives();
 				eProjectiles.remove(projectile);
 
@@ -1157,19 +1174,32 @@ public class Board extends JPanel implements MouseListener {
 
 		// int ppW = Images.getInfo().getWidth() / 25;
 		// int ppH = Images.getInfo().getHeight() / 25;
-		int ppX1 = (int) (width - margin / 1.25) - infoW;
-		int ppY1 = height - margin / 2;
+		int ppX = (int) (width - margin / 2) - infoW * 2 - 10;
 		BufferedImage pauseOrPlay;
 		if (!pause) {
 			pauseOrPlay = Images.getPause();
 		} else {
 			pauseOrPlay = Images.getPlay();
 		}
-		g.drawImage(pauseOrPlay, (int) ppX1, ppY1, infoW, infoH, null);
-		playOrPauseRect.add(ppX1);
-		playOrPauseRect.add(ppX1 + infoW);
-		playOrPauseRect.add(ppY1);
-		playOrPauseRect.add(ppX1 + infoH);
+		g.drawImage(pauseOrPlay, (int) ppX, infoY1, infoW, infoH, null);
+		playOrPauseRect.add(ppX);
+		playOrPauseRect.add(ppX + infoW);
+		playOrPauseRect.add(infoY1);
+		playOrPauseRect.add(ppX + infoH);
+
+		int muteX = (int) (width - margin/2) - infoW * 3 - 20;
+//		System.out.println(muteX);
+		BufferedImage muteImage;
+		if (!mute) {
+			muteImage = Images.getMakeSound();
+		} else {
+			muteImage = Images.getMute();
+		}
+		g.drawImage(muteImage, (int) muteX, infoY1, infoW, infoH, null);
+		muteRect.add(muteX);
+		muteRect.add(ppX + infoW);
+		muteRect.add(infoY1);
+		muteRect.add(ppX + infoH);
 	}
 
 	private void paintGameOverPanel(Graphics g) {
@@ -1262,15 +1292,18 @@ public class Board extends JPanel implements MouseListener {
 			for (int c = 0; c < enemies.get(r).size(); c++) {
 				Enemy enemy = enemies.get(r).get(c);
 				if (!enemy.isInvalid()) {
-					if (enemy.getSuperPower() != null && !pause) {
-						if (enemy.getRow() > superpowerCurrentRow + 12) {
-							superpowerMovingUp = true;
-						}
-						if (enemy.getRow() > superpowerCurrentRow - 12 && superpowerMovingUp) {
-							enemy.setRow(enemy.getRow() - 1);
-						} else {
-							superpowerMovingUp = false;
-							enemy.setRow(enemy.getRow() + 1);
+					if (enemy.getSuperPower() != null) {
+						if (!pause) {
+
+							if (enemy.getRow() > superpowerCurrentRow + 12) {
+								superpowerMovingUp = true;
+							}
+							if (enemy.getRow() > superpowerCurrentRow - 12 && superpowerMovingUp) {
+								enemy.setRow(enemy.getRow() - 1);
+							} else {
+								superpowerMovingUp = false;
+								enemy.setRow(enemy.getRow() + 1);
+							}
 						}
 						enemy.setWidth(enemy.getImage().getWidth() / 8);
 						enemy.setHeight(enemy.getImage().getHeight() / 8);
@@ -1406,6 +1439,11 @@ public class Board extends JPanel implements MouseListener {
 				showInfo = false;
 				board.repaint();
 			}
+			else if (checkInRect(mX, mY, muteRect)) {
+				System.out.println("mute clicked");
+				mute = !mute;
+				board.repaint();
+			}
 		}
 
 	}
@@ -1436,3 +1474,5 @@ public class Board extends JPanel implements MouseListener {
 	}
 
 }
+
+
